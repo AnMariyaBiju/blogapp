@@ -2,8 +2,9 @@ const Express = require("express")
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
 const cors = require("cors")
-const jsonwebtoken = require("jsonwebtoken")
+const jwt = require("jsonwebtoken")
 const userModel = require("./models/users")
+const postModel = require("./models/post")
 
 
 
@@ -14,6 +15,29 @@ app.use(Express.json())
 app.use(cors())
 
 mongoose.connect("mongodb+srv://newuser:newuser@cluster0.moiyaer.mongodb.net/blogAppDb?retryWrites=true&w=majority&appName=Cluster0")
+//create a post
+app.post("/create", async (req, res) => {
+    let input = req.body
+    let token = req.headers.token
+
+    jwt.verify(token, "blogapp", async (error, decoded) => {
+        if (decoded && decoded.email) {
+            let result = new postModel(input)
+            await result.save()
+            res.json({ "status": "success" })
+        } else {
+            res.json({ "status": "invalid authentication" })
+        }
+    })
+})
+
+//view all
+app.post("/viewall")
+
+
+
+
+
 //sign in
 app.post("/signin",async(req,res)=>{
     let input = req.body
@@ -24,7 +48,7 @@ app.post("/signin",async(req,res)=>{
              const passwordvalidator=bcrypt.compareSync(req.body.password,items[0].password)
              if(passwordvalidator)
              {
-              jsonwebtoken.sign({email:req.body.email},"blogapp",{expiresIn:"1d"},(error,token)=>{
+              jwt.sign({email:req.body.email},"blogapp",{expiresIn:"2d"},(error,token)=>{
 
                 if (error) {
                     res.json({"status":"error","errormessage":error})
